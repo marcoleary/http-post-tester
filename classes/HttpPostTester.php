@@ -9,6 +9,7 @@ use Teapot\StatusCode;
 
 class HttpPostTester
 {
+	// this is the response we expect back from the tested URLs
 	const EXPECTED_RESPONSE = 'OK';
 	
 	protected $strPathToData = __DIR__ . '/../data/';
