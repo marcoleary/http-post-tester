@@ -54,15 +54,15 @@ class HttpPostTester
 	{
 		$objHttp = new GuzzleHttp\Client();
 
-        $objResult = $objHttp->post($strUrl, [
-            GuzzleHttp\RequestOptions::ALLOW_REDIRECTS => true,
-            GuzzleHttp\RequestOptions::CONNECT_TIMEOUT =>  5,
-            GuzzleHttp\RequestOptions::HTTP_ERRORS => false,
-            GuzzleHttp\RequestOptions::QUERY => []
-        ]);
+        	$objResult = $objHttp->post($strUrl, [
+            		GuzzleHttp\RequestOptions::ALLOW_REDIRECTS => true,
+            		GuzzleHttp\RequestOptions::CONNECT_TIMEOUT =>  5,
+            		GuzzleHttp\RequestOptions::HTTP_ERRORS => false,
+            		GuzzleHttp\RequestOptions::QUERY => []
+        	]);
 
-        if (StatusCode::OK === (int) $objResult->getStatusCode()) {
-            $this->objLogger->addDebug(sprintf('[Result_OK] 200 OK from %s', $strUrl), [
+        	if (StatusCode::OK === (int) $objResult->getStatusCode()) {
+            		$this->objLogger->addDebug(sprintf('[Result_OK] 200 OK from %s', $strUrl), [
 				'body' => (string) $objResult->getBody()
 			]);
 
@@ -71,7 +71,7 @@ class HttpPostTester
 					'body' => (string) $objResult->getBody()
 				]);
 			}
-        } else {
+        	} else {
 			$this->objLogger->addCritical(sprintf('[Result_CRIT] %d from %s', $objResult->getStatusCode(), $strUrl), [
 				'body' => (string) $objResult->getBody()
 			]);
