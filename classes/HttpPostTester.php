@@ -20,7 +20,7 @@ class HttpPostTester
 		date_default_timezone_set('Europe/London');
 
 		$this->objLogger = new Logger(__CLASS__);
-        $this->objLogger->pushHandler(new StreamHandler(sprintf('%s/../logs/results_%s.log', __DIR__, date('YmdHis')), Logger::WARNING));
+        	$this->objLogger->pushHandler(new StreamHandler(sprintf('%s/../logs/results_%s.log', __DIR__, date('YmdHis')), Logger::WARNING));
         $this->objLogger->pushHandler(new StreamHandler('php://stdout', Logger::DEBUG));
 	}
 
