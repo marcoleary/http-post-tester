@@ -15,10 +15,14 @@ class HttpPostTester
 	protected $strPathToData = __DIR__ . '/../data/';
 
 	protected $objLogger;
+	
+	protected $guzzleClient;
 
 	public function __construct()
 	{
 		date_default_timezone_set('Europe/London');
+		
+		$this->guzzleClient = new GuzzleHttp\Client();
 
 		$this->objLogger = new Logger(__CLASS__);
         	$this->objLogger->pushHandler(new StreamHandler(sprintf('%s/../logs/results_%s.log', __DIR__, date('YmdHis')), Logger::WARNING));
@@ -53,9 +57,7 @@ class HttpPostTester
 
 	public function doHttpPost($strUrl)
 	{
-		$objHttp = new GuzzleHttp\Client();
-
-        	$objResult = $objHttp->post($strUrl, [
+        	$objResult = $this->guzzleClient->post($strUrl, [
             		GuzzleHttp\RequestOptions::ALLOW_REDIRECTS => true,
             		GuzzleHttp\RequestOptions::CONNECT_TIMEOUT =>  5,
             		GuzzleHttp\RequestOptions::HTTP_ERRORS => false,
