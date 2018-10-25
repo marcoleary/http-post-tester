@@ -4,78 +4,72 @@ namespace HttpPostTester;
 
 use Monolog\Logger;
 use Monolog\Handler\StreamHandler;
-use GuzzleHttp;
+use GuzzleHttp\Client;
+use GuzzleHttp\RequestOptions;
 use Teapot\StatusCode;
 
 class HttpPostTester
 {
-	// this is the response we expect back from the tested URLs
-	const EXPECTED_RESPONSE = 'OK';
-	
-	protected $strPathToData = __DIR__ . '/../data/';
+    // this is the response we expect back from the tested URLs
+    const EXPECTED_RESPONSE = 'OK';
 
-	protected $objLogger;
+    protected $strPathToData = __DIR__ . '/../data/';
 
-	public function __construct()
-	{
-		date_default_timezone_set('Europe/London');
+    protected $log;
 
-		$this->objLogger = new Logger(__CLASS__);
-        	$this->objLogger->pushHandler(new StreamHandler(sprintf('%s/../logs/results_%s.log', __DIR__, date('YmdHis')), Logger::WARNING));
-        	$this->objLogger->pushHandler(new StreamHandler('php://stdout', Logger::DEBUG));
-	}
+    protected $guzzle;
 
-	public function init()
-	{
-		$this->objLogger->addDebug('Started!');
+    public function __construct(Client $guzzle, Logger $log)
+    {
+        $this->guzzle = $guzzle;
+        $this->log = $log;
+    }
 
-		$resHandle = opendir($this->strPathToData);
+    public function init()
+    {
+        $this->log->addDebug('Started!');
 
-		while (false !== ($strFile = readdir($resHandle))) {
-			if (in_array($strFile, ['.', '..'])) {
-				continue;
-			}
+        $handle = opendir($this->strPathToData);
 
-			if ('csv' !== pathinfo($strFile, PATHINFO_EXTENSION)) {
-				continue;
-			}
+        while (false !== ($fileName = readdir($handle))) {
+            if (in_array($fileName, ['.', '..']) || 'csv' !== pathinfo($fileName, PATHINFO_EXTENSION)) {
+                continue;
+            }
 
-			if (false !== ($resFileHandle = fopen($this->strPathToData . $strFile, 'r'))) {
-				while (false !== ($arrRow = fgetcsv($resFileHandle))) {
-					$this->doHttpPost($arrRow[0]);
-				}
-				fclose($resFileHandle);
-			}
-		}
+            if (false !== ($file = fopen($this->strPathToData . $fileName, 'r'))) {
+                while (false !== ($row = fgetcsv($file))) {
+                    $this->doHttpPost($row[0]);
+                }
+                fclose($file);
+            }
+        }
 
-		$this->objLogger->addDebug('Finished!');
-	}
+        $this->log->addDebug('Finished!');
+    }
 
-	public function doHttpPost($strUrl)
-	{
-		$objHttp = new GuzzleHttp\Client();
+    public function doHttpPost($url)
+    {
+        $result = $this->guzzle->post($url, [
+            RequestOptions::ALLOW_REDIRECTS => true,
+            RequestOptions::CONNECT_TIMEOUT =>  5,
+            RequestOptions::HTTP_ERRORS => false,
+            RequestOptions::QUERY => []
+        ]);
 
-        	$objResult = $objHttp->post($strUrl, [
-            		GuzzleHttp\RequestOptions::ALLOW_REDIRECTS => true,
-            		GuzzleHttp\RequestOptions::CONNECT_TIMEOUT =>  5,
-            		GuzzleHttp\RequestOptions::HTTP_ERRORS => false,
-            		GuzzleHttp\RequestOptions::QUERY => []
-        	]);
+        if (StatusCode::OK === (int) $result->getStatusCode()) {
+            $this->log->addDebug(sprintf('[Result_OK] 200 OK from %s', $url), [
+                'body' => (string) $result->getBody()
+            ]);
 
-        	if (StatusCode::OK === (int) $objResult->getStatusCode()) {
-            		$this->objLogger->addDebug(sprintf('[Result_OK] 200 OK from %s', $strUrl), [
-				'body' => (string) $objResult->getBody()
-			]);
-
-			if (0 !== stripos((string) $objResult->getBody(), self::EXPECTED_RESPONSE)) {
-				$this->objLogger->addWarning(sprintf('[Result_WARN] %d but not OK from %s', $objResult->getStatusCode(), $strUrl), [
-					'body' => (string) $objResult->getBody()
-				]);
-			}
-        	} else {
-			$this->objLogger->addCritical(sprintf('[Result_CRIT] %d from %s', $objResult->getStatusCode(), $strUrl), [
-				'body' => (string) $objResult->getBody()
-			]);
-		}
-	}
+            if (0 !== stripos((string) $result->getBody(), self::EXPECTED_RESPONSE)) {
+                $this->log->addWarning(sprintf('[Result_WARN] %d but not OK from %s', $result->getStatusCode(), $url), [
+                    'body' => (string) $result->getBody()
+                ]);
+            }
+        } else {
+            $this->log->addCritical(sprintf('[Result_CRIT] %d from %s', $result->getStatusCode(), $url), [
+                'body' => (string) $result->getBody()
+            ]);
+        }
+    }
 }
