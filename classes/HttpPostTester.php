@@ -42,7 +42,7 @@ class HttpPostTester
                 continue;
             }
 
-            if (false !== ($file = fopen($this->strPathToData . $fileName, 'r'))) {
+            if (false !== ($file = fopen(getenv('PATH_TO_CSV_DIRECTORY') . $fileName, 'r'))) {
                 while (false !== ($row = fgetcsv($file))) {
                     $this->doHttpPost($row[0]);
                 }
