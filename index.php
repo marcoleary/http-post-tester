@@ -2,6 +2,9 @@
 
 require_once 'vendor/autoload.php';
 
+$dotenv = new Dotenv\Dotenv(__DIR__);
+$dotenv->load();
+
 date_default_timezone_set('Europe/London');
 
 $guzzle = new GuzzleHttp\Client();
