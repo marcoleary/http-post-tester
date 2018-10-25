@@ -1,19 +1,25 @@
 <?php
 
+declare(strict_types=1);
+
 namespace HttpPostTester;
 
 use Monolog\Logger;
-use Monolog\Handler\StreamHandler;
 use GuzzleHttp\Client;
 use GuzzleHttp\RequestOptions;
 use Teapot\StatusCode;
 
+/**
+ * Class starts here!
+ *
+ * @author Marc O'Leary <marcoleary@gmail.com>
+ */
 class HttpPostTester
 {
-    // this is the response we expect back from the tested URLs
+    /**
+     * The string value we expect to receive by the called URL
+     */
     const EXPECTED_RESPONSE = 'OK';
-
-    protected $strPathToData = __DIR__ . '/../data/';
 
     protected $log;
 
@@ -25,11 +31,11 @@ class HttpPostTester
         $this->log = $log;
     }
 
-    public function init()
+    public function init() : bool
     {
         $this->log->addDebug('Started!');
 
-        $handle = opendir($this->strPathToData);
+        $handle = opendir(getenv('PATH_TO_CSV_DIRECTORY'));
 
         while (false !== ($fileName = readdir($handle))) {
             if (in_array($fileName, ['.', '..']) || 'csv' !== pathinfo($fileName, PATHINFO_EXTENSION)) {
@@ -45,9 +51,11 @@ class HttpPostTester
         }
 
         $this->log->addDebug('Finished!');
+
+        return true;
     }
 
-    public function doHttpPost($url)
+    public function doHttpPost($url) : bool
     {
         $result = $this->guzzle->post($url, [
             RequestOptions::ALLOW_REDIRECTS => true,
@@ -71,5 +79,7 @@ class HttpPostTester
                 'body' => (string) $result->getBody()
             ]);
         }
+
+        return true;
     }
 }
